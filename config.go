@@ -34,39 +34,30 @@ type GoCfg struct {
 	*afero.Afero
 }
 
-func NewViper() *GoCfg {
-	return &GoCfg{Viper: viper.GetViper(), Q: input.DefaultUI(), Afero: fs}
+func New(cfgFile string) *GoCfg {
+
+	g := &GoCfg{Viper: viper.GetViper(), Q: input.DefaultUI(), Afero: fs}
+	g.AutomaticEnv()
+	if cfgFile != "" {
+		g.SetConfigFile(cfgFile)
+	} else {
+		// Search config in home directory with name ".temp" (without extension).
+		g.AddConfigPath(os.Getenv("PWD"))
+		g.SetConfigName(".config")
+		g.SetConfigType("yaml")
+	}
+	g.SetFs(g.Afero)
+	// If a config file is found, read it in.
+	if err := g.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", g.ConfigFileUsed())
+	} else {
+		lg.FatalIfErr(err, g.ConfigFileUsed(), "failed to read in config")
+	}
+	return g
 }
 
-func (g *GoCfg) Init(root *cobra.Command, cfgFile string) func() {
+func (g *GoCfg) BindCmd(root *cobra.Command) func() {
 	return func() {
-		if g == nil {
-			g = &GoCfg{
-				Q:     input.DefaultUI(),
-				Viper: viper.New(),
-				Afero: fs,
-			}
-		}
-		g.SetFs(g.Afero)
-		g.AutomaticEnv() // read in environment variables that match
-		if cfgFile != "" {
-			// Use config file from the flag.
-			g.SetConfigFile(cfgFile)
-		} else {
-
-			// Search config in home directory with name ".temp" (without extension).
-			g.AddConfigPath(os.Getenv("PWD"))
-			g.SetConfigName(".config")
-			g.SetConfigType("yaml")
-		}
-
-		// If a config file is found, read it in.
-		if err := g.ReadInConfig(); err == nil {
-			fmt.Println("Using config file:", g.ConfigFileUsed())
-		} else {
-			lg.FatalIfErr(err, g.ConfigFileUsed(), "failed to read in config")
-		}
-
 		if root.HasAvailableFlags() {
 			lg.DebugIfErr(g.BindPFlags(root.Flags()), root.Name(), "failed to bind config to Flags()")
 		}
