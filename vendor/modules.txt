@@ -6,7 +6,7 @@ github.com/Masterminds/sprig
 github.com/aokoli/goutils
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
-# github.com/gofunct/lg v0.0.0-20190211160313-a032f7d7c89c
+# github.com/gofunct/lg v0.0.0-20190211224322-b5bc557ba5c4
 github.com/gofunct/lg
 # github.com/google/uuid v1.1.0
 github.com/google/uuid
